@@ -1,0 +1,68 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+            - '../src/Tests/'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+    App\Service\Cell\CellEvolve:
+        class: App\Service\Cell\CellEvolve
+        public: true
+        arguments:
+            - !tagged_iterator { tag: app.rules, default_priority_method: getPriority }
+
+    App\Domain\Entity\Board:
+        class: App\Domain\Entity\Board
+        public: true
+        arguments:
+            $boardSize: 25
+            $cellEvolve: '@App\Service\Cell\CellEvolve'
+
+    App\Command\GameOfLifeCommand:
+        class: App\Command\GameOfLifeCommand
+        arguments:
+            $board: '@App\Domain\Entity\Board'
+
+    # Rules List
+    App\Service\Rules\LiveDiesUnderPopulationRule:
+        class: App\Service\Rules\LiveDiesUnderPopulationRule
+        public: true
+        tags:
+            - { name: 'app.rules', priority: 1 }
+
+    App\Service\Rules\LiveForTwoThreeNeighborsRule:
+        class: App\Service\Rules\LiveForTwoThreeNeighborsRule
+        public: true
+        tags:
+            - { name: 'app.rules', priority: 2 }
+
+    App\Service\Rules\LiveDiesForMoreThanThreeNeighborsRule:
+        class: App\Service\Rules\LiveDiesForMoreThanThreeNeighborsRule
+        public: true
+        tags:
+            - { name: 'app.rules', priority: 3 }
+
+    App\Service\Rules\DeadLivesForThreeNeighborsRule:
+        class: App\Service\Rules\DeadLivesForThreeNeighborsRule
+        public: true
+        tags:
+            - { name: 'app.rules', priority: 4 }

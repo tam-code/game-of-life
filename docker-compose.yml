@@ -1,0 +1,11 @@
+version: '3'
+services:
+  php:
+    build: docker_dev
+    volumes:
+      - ./:/app
+      - ./docker_dev/php.ini:/usr/local/etc/php/conf.d/custom.ini
+    environment:
+      PHP_IDE_CONFIG: serverName=docker
+    restart: always
+
